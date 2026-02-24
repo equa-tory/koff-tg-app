@@ -4,9 +4,48 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Hotel App</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            font-family: sans-serif;
+            background-color: var(--tg-theme-bg-color);
+        }
+        h1 {
+            color: var(--tg-theme-text-color);
+        }
+    </style>
 </head>
 <body>
     
+    
+    <h1>Telegram WebApp works</h1>
+
+    <input id="cityInput" placeholder="Enter city">
+    <button id="searchBtn">Search</button>
+    <div id="results"></div>
+
+
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+
+        async function searchHotels(city) {
+            const res = await fetch(`https://yourserver/search?city=${city}`);
+            const hotels = await res.json();
+            const container = document.getElementById('results');
+            container.innerHTML = hotels.map(h => `<div>${h.name} — $${h.price}</div>`).join('');
+        }
+
+        document.getElementById('searchBtn').addEventListener('click', () => {
+            const city = document.getElementById('cityInput').value;
+            searchHotels(city);
+        });
+    </script>
 </body>
 </html>
