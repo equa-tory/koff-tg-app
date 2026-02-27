@@ -1,4 +1,3 @@
-<!-- /frontend/index.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -14,38 +13,145 @@
             margin: 0;
             font-family: sans-serif;
             background-color: var(--tg-theme-bg-color);
+            color: var(--tg-theme-text-color);
+        }
+        * {
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
         }
         h1 {
             color: var(--tg-theme-text-color);
+        }
+
+        .container {
+            /* vertical */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
         }
     </style>
 </head>
 <body>
     
-    
-    <h1>Telegram WebApp works</h1>
-
-    <input id="cityInput" placeholder="Enter city">
-    <button id="searchBtn">Search</button>
-    <div id="results"></div>
+    <div class="container">
+        <h1>Hotels comparison</h1>
+        <div id="cityButtons" style="margin-bottom: 10px;"></div>
+        <input id="cityInput" placeholder="Enter city">
+        <button id="searchBtn">Search</button>
+        <div id="results"></div>
+    </div>
 
 
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script>
-        const tg = window.Telegram.WebApp;
-        tg.expand();
+    const tg = window.Telegram.WebApp;
+    tg.expand();
 
-        async function searchHotels(city) {
-            const res = await fetch(`https://equatory.ddns.net:6767/search?city=${city}`);
-            const hotels = await res.json();
-            const container = document.getElementById('results');
-            container.innerHTML = hotels.map(h => `<div>${h.name} — $${h.price}</div>`).join('');
+    const hotels = [
+        { id: 1, name: "Paris Hotel", city: "Paris", price: 120, type: "Hotel" },
+        { id: 2, name: "Cheap Hostel", city: "Paris", price: 35, type: "Hostel" },
+        { id: 3, name: "London Grand", city: "London", price: 150, type: "Hotel" },
+        { id: 4, name: "London Budget", city: "London", price: 40, type: "Hostel" },
+        { id: 5, name: "Berlin Central", city: "Berlin", price: 110, type: "Hotel" },
+        { id: 6, name: "Berlin Hostel", city: "Berlin", price: 25, type: "Hostel" },
+        { id: 7, name: "Tokyo Tower Hotel", city: "Tokyo", price: 200, type: "Hotel" },
+        { id: 8, name: "Tokyo Capsule", city: "Tokyo", price: 50, type: "Hostel" },
+        { id: 9, name: "New York Luxury", city: "New York", price: 220, type: "Hotel" },
+        { id: 10, name: "NY Backpacker", city: "New York", price: 60, type: "Hostel" }
+    ];
+
+    // Add city buttons above input
+    const cityButtonsDiv = document.getElementById('cityButtons');
+    const cities = [...new Set(hotels.map(h => h.city))];
+    cities.forEach(city => {
+        const btn = document.createElement('button');
+        btn.textContent = city;
+        btn.style.margin = '0 5px 5px 0';
+        btn.onclick = () => {
+            document.getElementById('cityInput').value = city;
+            searchBtn.click();
+        };
+        cityButtonsDiv.appendChild(btn);
+    });
+
+    let selected = [];
+    const compareDiv = document.createElement("div");
+    compareDiv.id = "compareBlock";
+    compareDiv.style.marginTop = "20px";
+    document.querySelector(".container").appendChild(compareDiv);
+
+    const resultsDiv = document.getElementById("results");
+    const searchBtn = document.getElementById("searchBtn");
+
+searchBtn.addEventListener("click", () => {
+    const city = document.getElementById("cityInput").value.trim();
+    resultsDiv.innerHTML = "";
+    selected = [];
+    compareDiv.innerHTML = "";
+
+    const filtered = hotels.filter(h => h.city.toLowerCase() === city.toLowerCase());
+
+    if (filtered.length === 0) {
+        resultsDiv.innerHTML = "<p>No hotels found</p>";
+        return;
+    }
+
+    filtered.forEach(hotel => {
+        const div = document.createElement("div");
+        div.innerHTML = `
+            <h3>${hotel.name}</h3>
+            <p>Type: ${hotel.type}</p>
+            <p>Price: $${hotel.price}</p>
+            <button onclick="bookHotel(${hotel.id})">Book</button>
+            <hr>
+        `;
+        resultsDiv.appendChild(div);
+        selected.push(hotel);
+    });
+
+    // Add single Compare All button
+    const compareAllBtn = document.createElement("button");
+    compareAllBtn.textContent = "Compare All";
+    compareAllBtn.onclick = () => {
+        if (selected.length < 2) {
+            compareDiv.innerHTML = "<p>Not enough hotels to compare.</p>";
+            return;
         }
-
-        document.getElementById('searchBtn').addEventListener('click', () => {
-            const city = document.getElementById('cityInput').value;
-            searchHotels(city);
+        let output = '<h2>Comparison</h2>';
+        let minPrice = selected[0].price;
+        let maxPrice = selected[0].price;
+        selected.forEach(h => {
+            output += `<p><b>${h.name}</b> — $${h.price}</p>`;
+            if(h.price < minPrice) minPrice = h.price;
+            if(h.price > maxPrice) maxPrice = h.price;
         });
+        let difference = maxPrice - minPrice;
+        output += `<p><b>Price range:</b> $${difference}</p>`;
+        compareDiv.innerHTML = output;
+    };
+    resultsDiv.appendChild(compareAllBtn);
+});
+
+
+    window.clearCompare = function() {
+        selected = [];
+        compareDiv.innerHTML = "";
+    }
+
+    window.bookHotel = function(id) {
+        const hotel = hotels.find(h => h.id === id);
+
+        tg.sendData(JSON.stringify({
+            action: "book",
+            hotel: hotel.name,
+            price: hotel.price
+        }));
+
+        alert("Booking confirmed ✅");
+    }
     </script>
 </body>
 </html>

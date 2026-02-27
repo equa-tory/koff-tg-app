@@ -36,64 +36,11 @@ def auth(msg):
 #endregion
 
 
-#region --- API ---
-HOTELS_FILE = "hotels.json"
-
-app = FastAPI()
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-
-def ensure_hotels_file():
-    if not os.path.exists(HOTELS_FILE):
-        default_hotels = [
-            {
-                "id": 1,
-                "name": "Tokyo Stay",
-                "city": "Tokyo",
-                "price": 120,
-                "rating": 4.5
-            },
-            {
-                "id": 2,
-                "name": "Osaka Inn",
-                "city": "Osaka",
-                "price": 90,
-                "rating": 4.2
-            },
-            {
-                "id": 3,
-                "name": "Berlin Central",
-                "city": "Berlin",
-                "price": 110,
-                "rating": 4.4
-            }
-        ]
-        with open(HOTELS_FILE, "w") as f:
-            json.dump(default_hotels, f, indent=4)
-
-
-def load_hotels():
-    ensure_hotels_file()
-    with open(HOTELS_FILE, "r") as f:
-        return json.load(f)
-
-
-@app.get("/search")
-def search_hotels(city: str = Query(...)):
-    hotels = load_hotels()
-    filtered = [
-        h for h in hotels
-        if h["city"].lower() == city.lower()
-    ]
-    return filtered
-#endregion
+@bot.message_handler(content_types=['web_app_data'])
+def web_app(message):
+    data = json.loads(message.web_app_data.data)
+    # bot.send_message(message.chat.id, f"Booking received:\n{data}")
+    bot.send_message(message.chat.id, f"Hotel booked: {data['hotel']}\nPrice: ${data['price']}")
 
 
 
@@ -101,3 +48,7 @@ def search_hotels(city: str = Query(...)):
 # register(bot)
 bot.remove_webhook()
 bot.infinity_polling()
+
+
+
+# /backend/main.py
