@@ -36,7 +36,7 @@
         tg.expand();
 
         async function searchHotels(city) {
-            const res = await fetch(`https://yourserver/search?city=${city}`);
+            const res = await fetch(`https://equatory.ddns.net:6767/search?city=${city}`);
             const hotels = await res.json();
             const container = document.getElementById('results');
             container.innerHTML = hotels.map(h => `<div>${h.name} — $${h.price}</div>`).join('');
